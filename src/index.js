@@ -1,20 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StatusBar } from 'react-native';
 
 import './config/ReactotronConfig';
-
-const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
-});
+import Routes from './routes';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Olá Rocketseat</Text>
-    </View>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#7159c1" />
+      <Routes />
+    </>
   );
 }
