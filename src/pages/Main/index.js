@@ -55,7 +55,7 @@ export default class Main extends Component {
   handleNavigate = user => {
     const { navigation } = this.props;
 
-    navigation.navigate('User', user);
+    navigation.navigate('User', { user });
   };
 
   handleAddUser = async () => {
@@ -96,7 +96,7 @@ export default class Main extends Component {
             returnKeyType="send"
             onSubmitEditing={this.handleAddUser}
           />
-          <SubmitButton onPress={this.handleAddUser}>
+          <SubmitButton loading={loading} onPress={this.handleAddUser}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (

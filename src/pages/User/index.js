@@ -1,17 +1,29 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { View } from 'react-native';
-
 import api from '../../services/api';
+
+import {
+  Container,
+  Header,
+  Avatar,
+  Name,
+  Bio,
+  Stars,
+  Starred,
+  OwnerAvatar,
+  Info,
+  Title,
+  Author,
+} from './styles';
 
 export default class User extends Component {
   static navigationOptions = ({ navigation }) => ({
-    title: navigation.getParams('user').name,
+    title: navigation.getParam('user').name,
   });
 
   static propTypes = {
     navigation: PropTypes.shape({
-      getParams: PropTypes.func,
+      getParam: PropTypes.func,
     }).isRequired,
   };
 
@@ -22,7 +34,7 @@ export default class User extends Component {
   async componentDidMount() {
     const { navigation } = this.props;
 
-    const user = navigation.getParams('user');
+    const user = navigation.getParam('user');
 
     const response = await api.get(`/users/${user.login}/starred`);
 
@@ -30,8 +42,33 @@ export default class User extends Component {
   }
 
   render() {
+    const { navigation } = this.props;
     const { stars } = this.state;
 
-    return <View />;
+    const user = navigation.getParam('user');
+
+    return (
+      <Container>
+        <Header>
+          <Avatar source={{ uri: user.avatar }} />
+          <Name>{user.name}</Name>
+          <Bio>{user.bio}</Bio>
+        </Header>
+
+        <Stars
+          data={stars}
+          keyExtractor={start => String(start.id)}
+          renderItem={({ item }) => (
+            <Starred>
+              <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
+              <Info>
+                <Title>{item.name}</Title>
+                <Author>{item.owner.login}</Author>
+              </Info>
+            </Starred>
+          )}
+        />
+      </Container>
+    );
   }
 }
