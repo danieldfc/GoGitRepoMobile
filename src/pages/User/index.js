@@ -14,6 +14,7 @@ import {
   Info,
   Title,
   Author,
+  Loading,
 } from './styles';
 
 export default class User extends Component {
@@ -24,26 +25,66 @@ export default class User extends Component {
   static propTypes = {
     navigation: PropTypes.shape({
       getParam: PropTypes.func,
+      navigate: PropTypes.func,
     }).isRequired,
   };
 
   state = {
     stars: [],
+    loading: true,
+    page: 1,
   };
 
   async componentDidMount() {
+    this.load();
+  }
+
+  load = async () => {
     const { navigation } = this.props;
+    const { page, stars } = this.state;
 
     const user = navigation.getParam('user');
 
-    const response = await api.get(`/users/${user.login}/starred`);
+    const response = await api.get(`/users/${user.login}/starred`, {
+      params: {
+        page,
+      },
+    });
 
-    this.setState({ stars: response.data });
-  }
+    return this.setState({
+      stars: [...stars, ...response.data],
+      loading: false,
+      refreshing: false,
+    });
+  };
+
+  loadMore = async user => {
+    const { page } = this.state;
+
+    this.setState({ page: page + 1 });
+
+    const response = await api.get(`/users/${user}/starred`, {
+      params: {
+        page,
+      },
+    });
+
+    if (!(response.headers.link && response.headers.link.includes('next'))) {
+      return new Error('Not permited the next page');
+    }
+
+    return this.setState({ stars: response.data });
+  };
+
+  handleRepository = repository => {
+    const { navigation } = this.props;
+
+    navigation.navigate('Repository', { repository });
+  };
 
   render() {
     const { navigation } = this.props;
-    const { stars } = this.state;
+    const { stars, loading, refreshing } = this.state;
 
     const user = navigation.getParam('user');
 
@@ -55,19 +96,27 @@ export default class User extends Component {
           <Bio>{user.bio}</Bio>
         </Header>
 
-        <Stars
-          data={stars}
-          keyExtractor={start => String(start.id)}
-          renderItem={({ item }) => (
-            <Starred>
-              <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
-              <Info>
-                <Title>{item.name}</Title>
-                <Author>{item.owner.login}</Author>
-              </Info>
-            </Starred>
-          )}
-        />
+        {loading ? (
+          <Loading />
+        ) : (
+          <Stars
+            onEndReachedThreshold={0.2}
+            onEndReached={() => this.loadMore(user.login)}
+            onRefresh={this.refreshList}
+            refreshing={refreshing}
+            data={stars}
+            keyExtractor={start => String(start.id)}
+            renderItem={({ item }) => (
+              <Starred onPress={() => this.handleRepository(item)}>
+                <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
+                <Info>
+                  <Title>{item.name}</Title>
+                  <Author>{item.owner.login}</Author>
+                </Info>
+              </Starred>
+            )}
+          />
+        )}
       </Container>
     );
   }
